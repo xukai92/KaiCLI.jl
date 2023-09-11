@@ -78,6 +78,8 @@ end
         weightdata_lst = filter(wd -> wd.datetime >= dt_latest_days_off, weightdata_lst)
     end
 
+    println("$num_days $(num_days > 1 ? "days" : "day") data:")
+    # TODO use PrettyTables.jl for this
     for wd in weightdata_lst
         println(wd)
     end
@@ -93,7 +95,7 @@ end
 
     x = map(wd -> wd.datetime, weightdata_lst)
     y = map(wd -> wd.weight, weightdata_lst)
-    print(lineplot(x, y; xlabel="time", name="weight (kg)", format=DT_FORMAT_SHORT, width=128, height=32))
+    print(lineplot(x, y; title="$num_weeks $(num_weeks > 1 ? "weeks" : "week") data", xlabel="time", name="weight (kg)", format=DT_FORMAT_SHORT, width=128, height=32))
 end
 
 end # module
