@@ -29,7 +29,7 @@ end
 
 module Weight
 
-using Printf, Dates, Comonicon, JSON, PrettyTables, UnicodePlots
+using Printf, Dates, Statistics, Comonicon, JSON, PrettyTables, UnicodePlots
 using ..KaiCLI: withawsenv
 
 import PrettyTables: pretty_table
@@ -123,13 +123,20 @@ end
     end
 
     println("$num_days $(num_days > 1 ? "days" : "day") data:")
-    pretty_table(weightdata_lst)
+    returnpretty_table(weightdata_lst)
 end
 
 function lineplot(weightdata_lst::AbstractVector{<:WeightData})
     dt_lst = map(wd -> wd.datetime, weightdata_lst)
     w_lst = map(wd -> wd.weight, weightdata_lst)
-    return lineplot(dt_lst, w_lst; xlabel="time", name="weight (kg)", format=DT_FORMAT_SHORT, width=128, height=32)
+    fig = lineplot(dt_lst, w_lst; xlabel="time", ylabel="kg", name="weight", format=DT_FORMAT_SHORT, width=128, height=32)
+    w_daily_lst = map(dt_lst) do dt
+        wd_lst = filter(wd -> dt - Hour(12) <= wd.datetime <= dt + Hour(12), weightdata_lst)
+        mean(wd -> wd.weight, wd_lst)
+    end
+    lineplot!(fig, dt_lst, w_daily_lst; name="daily avg.")
+    hline!(fig, 80.0; name="target")
+    return fig
 end
 
 @cast function plot(num_weeks::Int=1; all::Bool=false)
