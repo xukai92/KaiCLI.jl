@@ -117,6 +117,17 @@ function pretty_table(weightdata_lst::AbstractVector{<:WeightData})
     )
 end
 
+"""
+list past weight
+
+# Args
+
+- `num_days`: number of days to list
+
+# Flags
+
+- `-a, --all`: list all data
+"""
 @cast function list(num_days::Int=1; all::Bool=false)
     weightdata_lst = read_weightdata()
     if !all
@@ -142,6 +153,17 @@ function lineplot(weightdata_lst::AbstractVector{<:WeightData})
     return fig
 end
 
+"""
+plot weight trend
+
+# Args
+
+- `num_weeks`: number of weeks to plot
+
+# Flags
+
+- `-a, --all`: plot all data
+"""
 @cast function plot(num_weeks::Int=1; all::Bool=false)
     weightdata_lst = read_weightdata()
     if !all
