@@ -2,7 +2,7 @@ module KaiCLI
 
 using Comonicon
 
-@cast whoami() = println("Kai's CLI")
+@cast whoami() = println("my name is Kai Xu")
 
 module Weight
 
@@ -98,10 +98,23 @@ end
     print(lineplot(x, y; title="$num_weeks $(num_weeks > 1 ? "weeks" : "week") data", xlabel="time", name="weight (kg)", format=DT_FORMAT_SHORT, width=128, height=32))
 end
 
-end # module
+end # module Weight
 
 @cast Weight
 
 @main
 
-end # module
+### precompilation
+
+using PrecompileTools
+
+@setup_workload begin
+    @compile_workload begin
+        redirect_stdout(devnull) do
+            KaiCLI.command_main(["-h"])
+            KaiCLI.command_main(["weight", "-h"])
+        end
+    end
+end
+
+end # module KaiCLI
