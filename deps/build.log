@@ -1,0 +1,10 @@
+  Activating project at `~/.julia/scratchspaces/b930b912-156d-4a26-8717-67422bc321ee/env`
+   Resolving package versions...
+    Updating `~/.julia/scratchspaces/b930b912-156d-4a26-8717-67422bc321ee/env/Project.toml`
+  [b930b912] + KaiCLI v1.0.0-DEV `~/src/KaiCLI`
+    Updating `~/.julia/scratchspaces/b930b912-156d-4a26-8717-67422bc321ee/env/Manifest.toml`
+  [b930b912] + KaiCLI v1.0.0-DEV `~/src/KaiCLI`
+    Updating registry at `~/.julia/registries/General.toml`
+  No Changes to `~/.julia/scratchspaces/b930b912-156d-4a26-8717-67422bc321ee/env/Project.toml`
+  No Changes to `~/.julia/scratchspaces/b930b912-156d-4a26-8717-67422bc321ee/env/Manifest.toml`
+  Activating project at `~/src/KaiCLI`

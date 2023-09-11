@@ -3,6 +3,13 @@ uuid = "b930b912-156d-4a26-8717-67422bc321ee"
 authors = ["Kai Xu <me@xuk.ai> and contributors"]
 version = "1.0.0-DEV"
 
+[deps]
+Comonicon = "863f3e99-da2a-4334-8734-de3dacbe5542"
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
+JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+UnicodePlots = "b8865327-cd53-5732-bb35-84acbb429228"
+
 [compat]
 julia = "1"
 
