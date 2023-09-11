@@ -1,12 +1,39 @@
 module KaiCLI
 
-using Comonicon
+using TOML, Comonicon
+
+function read_config()
+    config_fp = expanduser("~/.config/kai-cli.toml")
+    return isfile(config_fp) ? TOML.parsefile(config_fp) : nothing
+end
+
+const CONFIG = read_config()
+
+function withawsenv(f)
+    env = []
+    awskeys = intersect(["secret_access_key", "secret_access_key", "default_region"], keys(CONFIG))
+    if !isnothing(CONFIG) && (length(awskeys) > 0)
+        @assert length(awskeys) == 3 "please provide all aws keys (\"secret_access_key\", \"secret_access_key\", \"default_region\") in the \"aws\" section of ~/.config/kai-cli.toml"
+        push!(env, "AWS_ACCESS_KEY_ID" => CONFIG["access_key_id"])
+        push!(env, "AWS_SECRET_ACCESS_KEY" => CONFIG["secret_access_key"])
+        push!(env, "AWS_DEFAULT_REGION" => CONFIG["default_region"])
+    end
+    if isempty(env)
+        return f()
+    else
+        return withenv(f, env...)
+    end
+end
 
 @cast whoami() = println("my name is Kai Xu")
 
 module Weight
 
-using Comonicon, JSON, Dates, Printf, UnicodePlots
+using Printf, Dates, Comonicon, JSON, PrettyTables, UnicodePlots
+using ..KaiCLI: withawsenv
+
+import PrettyTables: pretty_table
+import UnicodePlots: lineplot
 
 const DT_FORMAT_LONG = "mm/dd/yyyy-HH:MM:SS"
 const DT_FORMAT_SHORT = "mm/dd HH:MM"
@@ -40,7 +67,11 @@ track weight
     --table-name weight-tracker 
     --item $(JSON.json(item))
     ```
-    run(cmd)
+    withawsenv() do
+        run(cmd)
+    end
+
+    @info "$item tracked"
 end
 
 struct WeightData{Tt<:DateTime,Tw<:AbstractFloat}
@@ -62,12 +93,25 @@ function read_weightdata()
     --table-name weight-tracker 
     --output json
     ```
-    rawdata_lst = JSON.parse(read(cmd, String))["Items"]
+    out = withawsenv() do
+        read(cmd, String)
+    end
+    rawdata_lst = JSON.parse(out)["Items"]
 
     weightdata_lst = [WeightData(rawdata) for rawdata in rawdata_lst]
     sort!(weightdata_lst; by=(wd -> wd.datetime))
 
     return weightdata_lst
+end
+
+function pretty_table(weightdata_lst::AbstractVector{<:WeightData})
+    pretty_table(
+        Dict(
+            "datetime" => map(wd -> Dates.format(wd.datetime, DT_FORMAT_SHORT), weightdata_lst),
+            "weight" => map(wd -> @sprintf("%.2f", wd.weight), weightdata_lst),
+        );
+        header=["datetime", "weight"]
+    )
 end
 
 @cast function list(num_days::Int=1; all::Bool=false)
@@ -79,10 +123,13 @@ end
     end
 
     println("$num_days $(num_days > 1 ? "days" : "day") data:")
-    # TODO use PrettyTables.jl for this
-    for wd in weightdata_lst
-        println(wd)
-    end
+    pretty_table(weightdata_lst)
+end
+
+function lineplot(weightdata_lst::AbstractVector{<:WeightData})
+    dt_lst = map(wd -> wd.datetime, weightdata_lst)
+    w_lst = map(wd -> wd.weight, weightdata_lst)
+    return lineplot(dt_lst, w_lst; xlabel="time", name="weight (kg)", format=DT_FORMAT_SHORT, width=128, height=32)
 end
 
 @cast function plot(num_weeks::Int=1; all::Bool=false)
@@ -93,9 +140,8 @@ end
         weightdata_lst = filter(wd -> wd.datetime >= dt_latest_weeks_off, weightdata_lst)
     end
 
-    x = map(wd -> wd.datetime, weightdata_lst)
-    y = map(wd -> wd.weight, weightdata_lst)
-    print(lineplot(x, y; title="$num_weeks $(num_weeks > 1 ? "weeks" : "week") data", xlabel="time", name="weight (kg)", format=DT_FORMAT_SHORT, width=128, height=32))
+    println("$num_weeks $(num_weeks > 1 ? "weeks" : "week") data:")
+    print(lineplot(weightdata_lst))
 end
 
 end # module Weight
@@ -107,12 +153,27 @@ end # module Weight
 ### precompilation
 
 using PrecompileTools
+using .Weight: WeightData, Dates, DateTime, Day, pretty_table, lineplot
 
 @setup_workload begin
     @compile_workload begin
         redirect_stdout(devnull) do
+            read_config()
+            withawsenv() do 
+                run(`echo precompilation`) 
+            end
+            
             KaiCLI.command_main(["-h"])
+
             KaiCLI.command_main(["weight", "-h"])
+            let dt_bday = DateTime("1992-11-10", "yyyy-mm-dd"),
+                dt_lst = collect(dt_bday:Day(1):dt_bday+Day(2)),
+                w_lst = rand(length(dt_lst)),
+                wd_lst = [WeightData(dt, w) for (dt, w) in zip(dt_lst, w_lst)]
+
+                pretty_table(wd_lst)
+                lineplot(wd_lst)
+            end
         end
     end
 end
