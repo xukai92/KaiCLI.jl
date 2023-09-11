@@ -126,7 +126,7 @@ end
     end
 
     println("$num_days $(num_days > 1 ? "days" : "day") data:")
-    returnpretty_table(weightdata_lst)
+    return pretty_table(weightdata_lst)
 end
 
 function lineplot(weightdata_lst::AbstractVector{<:WeightData})
