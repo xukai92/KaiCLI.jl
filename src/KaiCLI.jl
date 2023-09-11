@@ -11,12 +11,15 @@ const CONFIG = read_config()
 
 function withawsenv(f)
     env = []
-    awskeys = intersect(["secret_access_key", "secret_access_key", "default_region"], keys(CONFIG))
-    if !isnothing(CONFIG) && (length(awskeys) > 0)
-        @assert length(awskeys) == 3 "please provide all aws keys (\"secret_access_key\", \"secret_access_key\", \"default_region\") in the \"aws\" section of ~/.config/kai-cli.toml"
-        push!(env, "AWS_ACCESS_KEY_ID" => CONFIG["access_key_id"])
-        push!(env, "AWS_SECRET_ACCESS_KEY" => CONFIG["secret_access_key"])
-        push!(env, "AWS_DEFAULT_REGION" => CONFIG["default_region"])
+    if (!isnothing(CONFIG) && ("aws" in keys(CONFIG)))
+        CONFIG_AWS = CONFIG["aws"]
+        awskeys = intersect(["access_key_id", "secret_access_key", "default_region"], keys(CONFIG_AWS))
+        if (length(awskeys) > 0)
+            @assert length(awskeys) == 3 "please provide all aws keys (\"access_key_id\", \"secret_access_key\", \"default_region\") in the \"aws\" section of ~/.config/kai-cli.toml"
+            push!(env, "AWS_ACCESS_KEY_ID" => CONFIG_AWS["access_key_id"])
+            push!(env, "AWS_SECRET_ACCESS_KEY" => CONFIG_AWS["secret_access_key"])
+            push!(env, "AWS_DEFAULT_REGION" => CONFIG_AWS["default_region"])
+        end
     end
     if isempty(env)
         return f()
