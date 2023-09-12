@@ -208,6 +208,7 @@ using .Weight: WeightData, Dates, DateTime, Day, pretty_table, lineplot
             withawsenv() do 
                 run(`echo precompilation`) 
             end
+            tryparse(Vector{Int}, "[80,81]")
             
             KaiCLI.command_main(["-h"])
 
