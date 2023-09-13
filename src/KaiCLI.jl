@@ -28,7 +28,7 @@ function withawsenv(f)
     end
 end
 
-function tryparse(::Type{Vector{T}}, s::AbstractString) where {T<:Real}
+function Base.tryparse(::Type{Vector{T}}, s::AbstractString) where {T<:Real}
     if ((s[1] == '[') || (s[end] == ']'))
         @assert ((s[1] == '[') && (s[end] == ']'))
         s = s[2:end-1]
