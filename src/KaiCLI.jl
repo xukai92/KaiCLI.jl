@@ -136,7 +136,7 @@ list past weight
 
 - `-a, --all`: list all data
 """
-@cast function list(num_days::Int=1; all::Bool=false)
+@cast function list(num_days::Int=2; all::Bool=false)
     weightdata_lst = read_weightdata()
     if !all
         dt_latest = weightdata_lst[end].datetime
