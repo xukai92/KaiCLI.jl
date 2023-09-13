@@ -161,15 +161,23 @@ list past weight
     pretty_table(weightdata_lst)
 end
 
-function lineplot(weightdata_lst::AbstractVector{<:WeightData}; targets=nothing)
+function lineplot(weightdata_lst::AbstractVector{<:WeightData}; minmax=false, targets=nothing)
     dt_lst = map(wd -> wd.datetime, weightdata_lst)
     w_lst = map(wd -> wd.weight, weightdata_lst)
     fig = lineplot(dt_lst, w_lst; xlabel="time", ylabel="kg", name="raw data", format=DT_FORMAT_SHORT, width=128, height=32)
+
     w_daily_lst = map(dt_lst) do dt
         wd_lst = filter(wd -> dt - Hour(12) <= wd.datetime <= dt + Hour(12), weightdata_lst)
         mean(wd -> wd.weight, wd_lst)
     end
     lineplot!(fig, dt_lst, w_daily_lst; name="daily avg.")
+    
+    if minmax
+        wmin, wmax = extrema(w_lst)
+        hline!(fig, wmin; name="min ($wmin)")
+        hline!(fig, wmax; name="max ($wmax)")
+    end
+    
     !isnothing(targets) && foreach(targets) do target
         hline!(fig, target; name="target ($target)")
     end
@@ -189,9 +197,10 @@ plot weight trend
 
 # Flags
 
+- `-m, --minmax`: plot min & max over the displayed period
 - `-a, --all`: plot all data
 """
-@cast function plot(num_weeks::Int=1; targets::Vector{Int}=[80], all::Bool=false)
+@cast function plot(num_weeks::Int=1; minmax::Bool=false, targets::Vector{Int}=[80], all::Bool=false)
     weightdata_lst = read_weightdata()
     if !all
         dt_latest = weightdata_lst[end].datetime
@@ -200,7 +209,7 @@ plot weight trend
     end
 
     println("$num_weeks $(num_weeks > 1 ? "weeks" : "week") data:")
-    print(lineplot(weightdata_lst; targets))
+    print(lineplot(weightdata_lst; minmax, targets))
 end
 
 end # module Weight
