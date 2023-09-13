@@ -85,17 +85,26 @@ track weight
     @info "$item tracked"
 end
 
-struct WeightData{Tt<:DateTime,Tw<:AbstractFloat}
+const Maybe{T} = Union{Nothing, T} where {T}
+
+struct WeightData{Tt<:DateTime,Twe<:AbstractFloat,Two<:Maybe{<:AbstractString},Tc<:Maybe{<:AbstractFloat}}
     datetime::Tt
-    weight::Tw
+    weight::Twe
+    workout::Two
+    calories::Tc
 end
-Base.show(io::IO, wd::WeightData) = print(io, "WeightData($(Dates.format(wd.datetime, DT_FORMAT_SHORT)), $(@sprintf("%.2f", wd.weight)))")
+Base.show(io::IO, wd::WeightData) = 
+    print(io, "WeightData($(Dates.format(wd.datetime, DT_FORMAT_SHORT)), $(@sprintf("%.2f", wd.weight)), $(wd.workout), $(@sprintf("%.2f", wd.calories)))")
+
+WeightData(datetime, weight) = WeightData(datetime, weight, nothing, nothing)
 
 function WeightData(rawdata)
     timestamp = rawdata["timestamp"]["S"]
     datetime = DateTime(timestamp, DT_FORMAT_LONG)
     weight = parse(Float64, rawdata["weight"]["N"])
-    return WeightData(datetime, weight)
+    workout = ("workout" in keys(rawdata)) ? rawdata["workout"]["S"] : nothing
+    calories = ("calories" in keys(rawdata)) ? parse(Float64, rawdata["calories"]["N"]) : nothing
+    return WeightData(datetime, weight, workout, calories)
 end
 
 function read_weightdata()
@@ -116,12 +125,16 @@ function read_weightdata()
 end
 
 function pretty_table(weightdata_lst::AbstractVector{<:WeightData})
+    data = hcat(
+        map(wd -> Dates.format(wd.datetime, DT_FORMAT_SHORT), weightdata_lst),
+        map(wd -> @sprintf("%.2f", wd.weight), weightdata_lst),
+        map(wd -> isnothing(wd.workout) ? "-" : wd.workout, weightdata_lst),
+        map(wd -> isnothing(wd.calories) ? "-" : @sprintf("%.2f", wd.calories), weightdata_lst),
+    )
     pretty_table(
-        Dict(
-            "datetime" => map(wd -> Dates.format(wd.datetime, DT_FORMAT_SHORT), weightdata_lst),
-            "weight" => map(wd -> @sprintf("%.2f", wd.weight), weightdata_lst),
-        );
-        header=["datetime", "weight"]
+        data;
+        header=["datetime", "weight", "workout", "calories"],
+        crop=:none,
     )
 end
 
@@ -145,7 +158,7 @@ list past weight
     end
 
     println("$num_days $(num_days > 1 ? "days" : "day") data:")
-    return pretty_table(weightdata_lst)
+    pretty_table(weightdata_lst)
 end
 
 function lineplot(weightdata_lst::AbstractVector{<:WeightData}; targets=nothing)
