@@ -85,9 +85,16 @@ track weight
     @info "$item tracked"
 end
 
+"""
+delete weight by timestamp
+
+# Args
+
+- `timestamp`: timestamp in format of $DT_FORMAT_LONG
+"""
 @cast function delete(timestamp::String)
     key = Dict("timestamp" => Dict("S" => timestamp))
-    
+
     cmd = ```
     aws dynamodb delete-item
     --table-name weight-tracker 
