@@ -85,6 +85,21 @@ track weight
     @info "$item tracked"
 end
 
+@cast function delete(timestamp::String)
+    key = Dict("timestamp" => Dict("S" => timestamp))
+    
+    cmd = ```
+    aws dynamodb delete-item
+    --table-name weight-tracker 
+    --key $(JSON.json(key))
+    ```
+    withawsenv() do
+        run(cmd)
+    end
+
+    @info "$key deleted"
+end
+
 const Maybe{T} = Union{Nothing, T} where {T}
 
 struct WeightData{Tt<:DateTime,Twe<:AbstractFloat,Two<:Maybe{<:AbstractString},Tc<:Maybe{<:AbstractFloat}}
