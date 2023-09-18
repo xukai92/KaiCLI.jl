@@ -18,11 +18,14 @@ track weight
 
 # Options
 
+- `-t, --timestamp`: timestamp of the data; default to calling `now()`
 - `-w, --workout`: workout that consumes the calories follow by
 - `-c, --calories`: calories consumed by the workout
 """
-@cast function track(weight::Float64; workout::String="", calories::Float64=0.0)
-    timestamp = Dates.format(now(), DT_FORMAT_LONG)
+@cast function track(weight::Float64; timestamp::String="", workout::String="", calories::Float64=0.0)
+    dt = isempty(timestamp) ? now() : DateTime(string(Year(now()).value) * '/' * timestamp, "yyyy" * '/' * DT_FORMAT_SHORT)
+    timestamp = Dates.format(dt, DT_FORMAT_LONG)
+
     item = Dict(
         "timestamp" => Dict("S" => timestamp),
         "weight" => Dict("N" => string(weight)),
